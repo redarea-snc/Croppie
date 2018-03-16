@@ -3,3 +3,7 @@ npm-debug.log
 node_modules/
 bower_components
 /nbproject/private/
+
+#Redarea - 16/03/2018 - Intellij Idea files e developing
+*.iml
+temp/
