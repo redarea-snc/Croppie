@@ -1,3 +1,11 @@
+/*****************************************************************************
+ * Rut - 16/03/2018 - riadattato da Croppie la libreria originale e forkato in
+ * un nostro repository custom
+ * Per modifiche impossibili da fare con la sola estensione di classe
+ *
+ * LV - 14/04/2017 - forza zoomer_max se è impostato nelle opzioni di Croppie
+ *****************************************************************************/
+
 /*************************
  * Croppie
  * Copyright 2017
@@ -180,7 +188,10 @@
             img.exifdata = null;
             img.removeAttribute('crossOrigin');
             if (src.match(/^https?:\/\/|^\/\//)) {
-                img.setAttribute('crossOrigin', 'anonymous');
+                //--Rut - 28/03/2017 - a noi su ambiente Cordova/Ionic fa fallire miseramente il caricamento delle immagini
+                // e quindi lo dobbiamo necessariamente disabilitare - ma la cosa migliore sarebbe mettere una nuova opzione
+                // di configurazione per far accendere/spegnere cross origin
+                //img.setAttribute('crossOrigin', 'anonymous');
             }
             img.onload = function () {
                 if (doExif) {
@@ -581,10 +592,13 @@
 
     function _setZoomerVal(v) {
         if (this.options.enableZoom) {
-            var z = this.elements.zoomer,
-                val = fix(v, 4);
+            //--Rut - 21/02/2108 - fix https://sentry.io/redarea/rikorda/issues/418475921/
+            if(this && this.elements){
+                var z = this.elements.zoomer,
+                    val = fix(v, 4);
 
-            z.value = Math.max(z.min, Math.min(z.max, val));
+                z.value = Math.max(z.min, Math.min(z.max, val));
+            }
         }
     }
 
@@ -770,6 +784,11 @@
             transform;
 
         function assignTransformCoordinates(deltaX, deltaY) {
+            //--Rut - 12/01/2018 - fix errore evento che effettua aggiornamento di un Croppie già destroyed
+            if(!self.elements || !self.elements.preview){
+                return;
+            }
+
             var imgRect = self.elements.preview.getBoundingClientRect(),
                 top = transform.y + deltaY,
                 left = transform.x + deltaX;
@@ -790,6 +809,11 @@
         }
 
         function toggleGrabState(isDragging) {
+          //--Rut - 31/01/2018 - fix https://sentry.io/redarea/rikorda/issues/253064642/events/13023322395/
+          if(!self || !self.elements){
+              return;
+          }
+
           self.elements.preview.setAttribute('aria-grabbed', isDragging);
           self.elements.boundary.setAttribute('aria-dropeffect', isDragging? 'move': 'none');
         }
@@ -910,7 +934,14 @@
             assignTransformCoordinates(deltaX, deltaY);
 
             newCss[CSS_TRANSFORM] = transform.toString();
-            css(self.elements.preview, newCss);
+
+            //--Rut - 12/02/2018 -  fix https://sentry.io/redarea/rikorda/issues/441701670/
+            // Errori evidentemente causati da un destroy view mal temporizzato
+            // css(self.elements.preview, newCss);
+            if(!!self && !!self.elements){
+                css(self.elements.preview, newCss);
+            }
+
             _updateOverlay.call(self);
             originalY = pageY;
             originalX = pageX;
@@ -979,8 +1010,14 @@
     }
 
     function _updatePropertiesFromImage() {
-        var self = this,
-            initialZoom = 1,
+        //--Rut - 05/11/2017 - fix https://sentry.io/redarea/rikorda/issues/253064642/events/10174980497/
+        // Callback di update residue che agiscono su elementi html già distrutti - vanno stoppate
+        var self = this;
+        if(!self || !self.elements || !self.elements.preview){
+            return;
+        }
+
+        var initialZoom = 1,
             cssReset = {},
             img = self.elements.preview,
             imgData = self.elements.preview.getBoundingClientRect(),
@@ -1013,7 +1050,9 @@
         cssReset[CSS_TRANSFORM] = transformReset.toString();
         css(img, cssReset);
 
-        if (self.data.points.length) {
+        //--Rut - 16/01/2018 - fix https://sentry.io/redarea/rikorda/issues/208946853/
+        // if (self.data.points.length) {
+        if (!!self.data.points && self.data.points.length) {
             _bindPoints.call(self, self.data.points);
         }
         else {
@@ -1046,6 +1085,15 @@
 
         if (minZoom >= maxZoom) {
             maxZoom = minZoom + 1;
+        }
+
+        //Luca Vagnozzi: zoomer_max se impostato nelle opzioni
+        //--Rut - 16/03/2018 - nella versione di Croppie 2.6.1 è stato corretto il bug dello zoom massimo e, come si vede
+        // nell'opzione poche righe più in alto, ora prende in considerazione il valore options.maxZoom
+        // Conviene valutare se usare quella e smantellare il nostro vecchio zoomer_max
+        if (self.options.zoomer_max) {
+            maxZoom = self.options.zoomer_max;
+            // console.debug("croppie::zoomer_max", maxZoom);
         }
 
         zoomer.min = fix(minZoom, 4);
@@ -1103,8 +1151,13 @@
     }
 
     function _transferImageToCanvas(customOrientation) {
-        var self = this,
-            canvas = self.elements.canvas,
+        //--Rut - 22/01/2018 - fix canvas ancora non pronto
+        var self = this;
+        if(!self.elements){
+            return;
+        }
+
+            var canvas = self.elements.canvas,
             img = self.elements.img,
             ctx = canvas.getContext('2d'),
             exif = _hasExif.call(self),
@@ -1435,7 +1488,12 @@
 
     function _destroy() {
         var self = this;
-        self.element.removeChild(self.elements.boundary);
+        //--Rut - 16/01/2018 - fix https://sentry.io/redarea/rikorda/issues/216761138/ - elementi già distrutti
+        // self.element.removeChild(self.elements.boundary);
+        if(!!self.elements){
+            self.element.removeChild(self.elements.boundary);
+        }
+
         removeClass(self.element, 'croppie-container');
         if (self.options.enableZoom) {
             self.element.removeChild(self.elements.zoomerWrap);
