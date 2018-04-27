@@ -1511,7 +1511,11 @@
 
         removeClass(self.element, 'croppie-container');
         if (self.options.enableZoom) {
-            self.element.removeChild(self.elements.zoomerWrap);
+            //--Rut - 27/04/2018 - fix https://sentry.io/redarea/rikorda/issues/440632548/events/18912324188/
+            // self.element.removeChild(self.elements.zoomerWrap);
+            if(self && self.elements){
+                self.element.removeChild(self.elements.zoomerWrap);
+            }
         }
         delete self.elements;
     }
