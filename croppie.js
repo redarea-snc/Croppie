@@ -966,8 +966,13 @@
     }
 
     function _updateOverlay() {
-        var self = this,
-            boundRect = self.elements.boundary.getBoundingClientRect(),
+        var self = this;
+        //--Rut - 27/04/2018  fix https://sentry.io/redarea/rikorda/issues/216761138/events/18905114479/
+        if(!self || !self.elements){
+            return;
+        }
+        
+        var boundRect = self.elements.boundary.getBoundingClientRect(),
             imgData = self.elements.preview.getBoundingClientRect();
 
         css(self.elements.overlay, {
@@ -1364,8 +1369,18 @@
     }
 
     function _get() {
-        var self = this,
-            imgData = self.elements.preview.getBoundingClientRect(),
+        var self = this;
+        //--Rut - 27/04/2018 - Fix https://sentry.io/redarea/rikorda/issues/253064642/events/18905232919/
+        if(!self || !self.elements){
+            var scaleNull = !!self ? self._currentZoom : 0;
+
+            return {
+                points: [fix(0), fix(0), fix(0), fix(0)],
+                zoom: scaleNull
+            };
+        }
+
+        var imgData = self.elements.preview.getBoundingClientRect(),
             vpData = self.elements.viewport.getBoundingClientRect(),
             x1 = vpData.left - imgData.left,
             y1 = vpData.top - imgData.top,
