@@ -926,7 +926,11 @@
                     var scale = dist / originalDistance;
 
                     _setZoomerVal.call(self, scale);
-                    dispatchChange(self.elements.zoomer);
+                    //--Rut - 10/05/2018 - fix https://sentry.io/redarea/rikorda/issues/418475921/events/19909495949/
+                    // dispatchChange(self.elements.zoomer);
+                    if(self && self.elements){
+                        dispatchChange(self.elements.zoomer);
+                    }
                     return;
                 }
             }
