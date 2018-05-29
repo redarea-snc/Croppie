@@ -1015,6 +1015,10 @@
     }
 
     function _isVisible() {
+        //--Rut - 29/05/2018 - fix Fix https://sentry.io/redarea/rikorda/issues/253064642/events/21266426093/
+        if(!this.elements){
+            return false;
+        }
         return this.elements.preview.offsetHeight > 0 && this.elements.preview.offsetWidth > 0;
     }
 
