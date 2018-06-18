@@ -748,8 +748,13 @@
     }
 
     function _updateCenterPoint() {
-        var self = this,
-            scale = self._currentZoom,
+        var self = this;
+
+        //--Rut - 18/06/2018 - fix https://sentry.io/redarea/rikorda/issues/253064642/events/22262980650/
+        if(!self || !self.elements){
+            return;
+        }
+        var scale = self._currentZoom,
             data = self.elements.preview.getBoundingClientRect(),
             vpData = self.elements.viewport.getBoundingClientRect(),
             transform = Transform.parse(self.elements.preview.style[CSS_TRANSFORM]),
